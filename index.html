@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>من المجهر إلى الحقل: دليل الخلية النباتية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- إضافة مكتبة أيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Chosen Palette: Warm Neutrals with Green Accent -->
+    <!-- Application Structure Plan: تم تصميم التطبيق بهيكل تفاعلي قائم على المهام بدلاً من الهيكل الخطي للتقرير الأصلي. يبدأ بمخطط تفاعلي للخلية للاستكشاف البصري، يليه قسم "تحديات الحقل" الذي يربط المشاكل العملية (مثل الذبول) بأسبابها الخلوية مباشرة. ثم ينتقل إلى "تقنيات متقدمة" و "ركن الاستشاري" لتقديم حلول وأدوات عملية. تم اختيار هذا الهيكل لتسهيل وصول المهندس الزراعي إلى المعلومات التي يحتاجها لحل مشاكل محددة، مما يجعل المحتوى أكثر عملية وفائدة في السياق الميداني. -->
+    <!-- Visualization & Content Choices: 1. مخطط الخلية (HTML/CSS): الهدف: تنظيم واستكشاف مكونات الخلية. الطريقة: مخطط تفاعلي مبني بـ HTML/CSS. التفاعل: النقر على المكونات لعرض المعلومات. التبرير: طريقة بصرية وجذابة لاستكشاف التشريح الخلوي وتجنب استخدام رسوم SVG الثابتة. 2. تحديات الحقل (HTML Cards): الهدف: مقارنة وربط المشاكل بالحلول. الطريقة: بطاقات تفاعلية. التفاعل: النقر على البطاقة يكشف عن السبب الخلوي والحلول العملية. التبرير: يركز على المهام ويقدم إجابات سريعة للمشاكل الميدانية. 3. ركن الاستشاري (Chart.js): الهدف: تلخيص وتقديم معلومات سريعة. الطريقة: رسم بياني شريطي تفاعلي. التفاعل: اختيار عنصر غذائي من القائمة المنسدلة لتحديث الرسم البياني والنصائح. التبرير: أداة قوية وديناميكية لعرض أدوار العناصر الغذائية بشكل كمي، مما يعزز دور المهندس كخبير استشاري. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Cairo', sans-serif; scroll-behavior: smooth; }
+        .active-nav { color: #166534; border-bottom: 2px solid #166534; }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item:hover { color: #16a34a; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .cell-component { cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; }
+        .cell-component:hover, .cell-component.selected { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); transform: scale(1.05); }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        .details.hidden { display: none; }
+    </style>
+</head>
+<body class="bg-stone-50 text-amber-900 flex flex-col min-h-screen">
+
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-emerald-800">دليل الخلية النباتية</h1>
+            <div class="hidden md:flex space-x-reverse space-x-8">
+                <a href="#home" class="nav-item active-nav font-semibold" data-section="home">الرئيسية</a>
+                <a href="#cell-structure" class="nav-item font-semibold" data-section="cell-structure">تركيب الخلية</a>
+                <a href="#field-challenges" class="nav-item font-semibold" data-section="field-challenges">تحديات الحقل</a>
+                <a href="#advanced-techniques" class="nav-item font-semibold" data-section="advanced-techniques">تقنيات متقدمة</a>
+                <a href="#consultant-corner" class="nav-item font-semibold" data-section="consultant-corner">ركن الاستشاري</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4 space-y-2 transition-all duration-300 ease-in-out">
+            <a href="#home" class="block nav-item font-semibold py-2" data-section="home">الرئيسية</a>
+            <a href="#cell-structure" class="block nav-item font-semibold py-2" data-section="cell-structure">تركيب الخلية</a>
+            <a href="#field-challenges" class="block nav-item font-semibold py-2" data-section="field-challenges">تحديات الحقل</a>
+            <a href="#advanced-techniques" class="block nav-item font-semibold py-2" data-section="advanced-techniques">تقنيات متقدمة</a>
+            <a href="#consultant-corner" class="block nav-item font-semibold py-2" data-section="consultant-corner">ركن الاستشاري</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 flex-grow">
+        
+        <section id="home" class="content-section active text-center py-12 md:py-20">
+            <h2 class="text-3xl md:text-5xl font-extrabold text-emerald-700 mb-4 animate-fade-in">من المجهر إلى الحقل</h2>
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-amber-800 mb-6 animate-fade-in-delay">
+                أداة تفاعلية للمهندس الزراعي لربط أساسيات علم الخلية النباتية بالتطبيقات العملية في الميدان. استكشف كيف يمكن لفهم أعمق لأصغر وحدة في النبات أن يمنحك رؤى استشارية متقدمة لحل أكبر تحديات الحقل.
+            </p>
+            <div class="w-24 h-1 bg-emerald-600 mx-auto rounded-full animate-fade-in-delay"></div>
+        </section>
+
+        <section id="cell-structure" class="content-section py-8">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-2 text-center">استكشف الخلية النباتية</h2>
+            <p class="text-center text-amber-800 mb-8 max-w-2xl mx-auto">انقر على أي مكون في المخطط لمعرفة وظيفته وأهميته العملية في الحقل.</p>
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                <div class="w-full lg:w-1/2">
+                    <div id="cell-diagram" class="relative w-full max-w-lg mx-auto aspect-square bg-green-100 border-8 border-green-800 rounded-3xl shadow-xl p-4">
+                        <div id="cell-wall" data-component="cell-wall" class="cell-component absolute inset-0 border-[6px] border-green-600 rounded-[2rem]"></div>
+                        <div id="cytoplasm" data-component="cytoplasm" class="cell-component absolute inset-6 bg-green-200/50 rounded-[1.5rem] transition-all duration-500"></div>
+                        <div id="vacuole" data-component="vacuole" class="cell-component absolute inset-10 bg-blue-300/60 border-2 border-blue-500 rounded-[1rem] flex items-center justify-center text-blue-800 font-semibold p-4 text-center">الفجوة العصارية</div>
+                        <div id="nucleus" data-component="nucleus" class="cell-component absolute top-1/4 left-1/4 md:top-1/3 md:left-1/3 w-16 h-16 bg-purple-400 border-2 border-purple-600 rounded-full flex items-center justify-center text-xs text-purple-800 font-bold p-2 text-center">النواة</div>
+                        <div id="chloroplast" data-component="chloroplast" class="cell-component absolute bottom-12 right-12 w-12 h-8 bg-green-500 border-2 border-green-700 rounded-xl"></div>
+                        <div id="mitochondrion" data-component="mitochondrion" class="cell-component absolute top-12 left-20 w-10 h-6 bg-red-400 border-2 border-red-600 rounded-full"></div>
+                        <p class="absolute top-4 right-4 text-sm text-green-800 font-bold">الجدار الخلوي</p>
+                        <p class="absolute bottom-4 left-4 text-xs text-blue-900 font-bold">السيتوبلازم</p>
+                    </div>
+                </div>
+                <div id="component-info" class="w-full lg:w-1/2 bg-white p-6 rounded-2xl shadow-xl min-h-[300px] flex flex-col justify-center">
+                    <h3 id="info-title" class="text-2xl font-bold text-emerald-700 mb-4">اختر مكوناً</h3>
+                    <p id="info-description" class="text-amber-800 mb-4">ستظهر هنا معلومات تفصيلية عن المكون المختار.</p>
+                    <div class="bg-amber-50 p-4 rounded-xl">
+                        <h4 class="font-bold text-emerald-800 mb-2">💡 الأهمية العملية في الحقل:</h4>
+                        <p id="info-practical" class="text-amber-900">ستظهر هنا الفائدة العملية للمكون في الممارسات الزراعية.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="field-challenges" class="content-section py-8">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">تحديات الحقل وأساسها الخلوي</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="challenge-card bg-white p-6 rounded-2xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-3">صلابة الثمار ومقاومة الذبول</h3>
+                    <div class="details hidden">
+                        <p class="text-amber-800 mb-2"><strong class="text-emerald-700">السبب الخلوي:</strong> قوة <span class="font-bold">الجدار الخلوي</span> وتماسك الصفيحة الوسطى (بفعل الكالسيوم) تحدد صلابة الثمار. <span class="font-bold">الفجوة العصارية</span> الممتلئة بالماء تولد ضغط الامتلاء الذي يحافظ على استقامة النبات ويمنع الذبول.</p>
+                        <p class="text-amber-800 mt-4"><strong class="text-emerald-700">حلول استشارية:</strong> الاهتمام بتسميد الكالسيوم لتقوية جدران الخلايا. تنظيم الري للحفاظ على ضغط الامتلاء الأمثل.</p>
+                    </div>
+                </div>
+                <div class="challenge-card bg-white p-6 rounded-2xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-3">مقاومة الأمراض والآفات</h3>
+                     <div class="details hidden">
+                        <p class="text-amber-800 mb-2"><strong class="text-emerald-700">السبب الخلوي:</strong> <span class="font-bold">الجدار الخلوي</span> هو خط الدفاع الميكانيكي الأول. عند الإصابة، يقوم النبات بترسيب اللجنين والكالوز لتقويته وعزل المسبب المرضي.</p>
+                        <p class="text-amber-800 mt-4"><strong class="text-emerald-700">حلول استشارية:</strong> استخدام محفزات المناعة النباتية التي تنشط آليات الدفاع الخلوية. التغذية المتوازنة (خاصة السيليكون والكالسيوم) لتقوية الجدار.</p>
+                    </div>
+                </div>
+                <div class="challenge-card bg-white p-6 rounded-2xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-3">تحمل الجفاف والملوحة</h3>
+                    <div class="details hidden">
+                        <p class="text-amber-800 mb-2"><strong class="text-emerald-700">السبب الخلوي:</strong> <span class="font-bold">الفجوة العصارية</span> تنظم الضغط الأسموزي عن طريق تراكم الأملاح والسكريات، مما يمكن الخلية من سحب الماء من التربة الجافة أو المالحة.</p>
+                        <p class="text-amber-800 mt-4"><strong class="text-emerald-700">حلول استشارية:</strong> استخدام الأسمدة الحيوية (الميكوريزا) التي تحسن امتصاص الماء. التسميد البوتاسي الذي يساعد في التنظيم الأسموزي.</p>
+                    </div>
+                </div>
+                 <div class="challenge-card bg-white p-6 rounded-2xl shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-3">كفاءة امتصاص العناصر</h3>
+                    <div class="details hidden">
+                        <p class="text-amber-800 mb-2"><strong class="text-emerald-700">السبب الخلوي:</strong> نفاذية <span class="font-bold">الجدار الخلوي</span> وسلامة الأغشية الخلوية تتحكم في دخول الماء والعناصر الغذائية إلى الجذر. <span class="font-bold">الميتوكوندريا</span> توفر الطاقة (ATP) اللازمة لعمليات النقل النشط للعناصر.</p>
+                        <p class="text-amber-800 mt-4"><strong class="text-emerald-700">حلول استشارية:</strong> إضافة المواد العضوية (حمض الهيوميك) لتحسين نفاذية الجدران الخلوية. ضمان تهوية جيدة للتربة لتوفير الأكسجين اللازم لعمل الميتوكوندريا.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="advanced-techniques" class="content-section py-8">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">تقنيات متقدمة مبنية على علم الخلية</h2>
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-3">زراعة الأنسجة (Tissue Culture)</h3>
+                    <p class="text-amber-800">تعتمد هذه التقنية على خاصية "القدرة الكلية" (Totipotency) للخلية النباتية، أي قدرة خلية واحدة على تكوين نبات كامل. تُستخدم لإنتاج شتلات خالية من الفيروسات عن طريق زراعة الخلايا المريستيمية سريعة الانقسام، وإكثار الأصناف المرغوبة بكميات هائلة.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold text-emerald-800 mb-3">التطعيم (Grafting)</h3>
+                    <p class="text-amber-800">يعتمد نجاح التطعيم على الالتحام الدقيق لنسيج <span class="font-bold">الكامبيوم الوعائي</span> بين الأصل والطعم. هذا النسيج الإنشائي هو المسؤول عن تكوين أوعية الخشب واللحاء الجديدة التي ستصل بين جزئي النبات. الفهم الخلوي يضمن اختيار الأصول المتوافقة ويزيد من نسبة نجاح العملية.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="consultant-corner" class="content-section py-8">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">ركن الاستشاري: التغذية والأدوار الخلوية</h2>
+            <div class="flex flex-col md:flex-row items-center gap-8 bg-white p-6 rounded-2xl shadow-lg">
+                <div class="w-full md:w-1/3">
+                    <label for="nutrient-select" class="block mb-2 font-semibold text-amber-800">اختر عنصراً غذائياً:</label>
+                    <select id="nutrient-select" class="w-full p-2 border border-stone-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300">
+                        <option value="ca">الكالسيوم (Ca)</option>
+                        <option value="k">البوتاسيوم (K)</option>
+                        <option value="p">الفوسفور (P)</option>
+                        <option value="n">النيتروجين (N)</option>
+                        <option value="fe">الحديد (Fe)</option>
+                        <option value="zn">الزنك (Zn)</option>
+                    </select>
+                    <div id="nutrient-info" class="mt-4 bg-amber-50 p-4 rounded-xl">
+                        <h4 class="font-bold text-emerald-800 mb-2">💡 نصيحة استشارية:</h4>
+                        <p id="nutrient-tip" class="text-amber-900"></p>
+                    </div>
+                </div>
+                <div class="w-full md:w-2/3">
+                    <div class="chart-container">
+                        <canvas id="nutrientChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-emerald-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <p class="mb-2">صنع بواسطة أحمد توحيد</p>
+            <div class="flex justify-center space-x-4 text-2xl">
+                <a href="#" class="hover:text-amber-300 transition-colors duration-300 ml-3">
+                    <i class="fab fa-facebook-square"></i>
+                </a>
+                <a href="#" class="hover:text-amber-300 transition-colors duration-300">
+                    <i class="fab fa-twitter-square"></i>
+                </a>
+                <a href="#" class="hover:text-amber-300 transition-colors duration-300">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.nav-item');
+            const sections = document.querySelectorAll('.content-section');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            function setActiveSection(sectionId) {
+                sections.forEach(section => {
+                    section.classList.toggle('active', section.id === sectionId);
+                });
+                navLinks.forEach(link => {
+                    link.classList.toggle('active-nav', link.dataset.section === sectionId);
+                });
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sectionId = e.target.dataset.section;
+                    setActiveSection(sectionId);
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const cellData = {
+                'cell-wall': {
+                    title: 'الجدار الخلوي',
+                    description: 'تركيب صلب يحيط بالخلية النباتية، يتكون أساساً من السليلوز واللجنين. يوفر الدعامة والشكل للخلية.',
+                    practical: 'أساس صلابة الثمار وقوة السيقان. نقص الكالسيوم يضعف الصفيحة الوسطى بين الخلايا مسبباً مشاكل مثل "عفن الطرف الزهري" في الطماطم. هو أيضاً خط الدفاع الأول ضد الميكروبات.'
+                },
+                'vacuole': {
+                    title: 'الفجوة العصارية',
+                    description: 'عضية كبيرة تشغل معظم حجم الخلية الناضجة. تخزن الماء، الأيونات، والمغذيات، وتحافظ على ضغط الامتلاء.',
+                    practical: 'المسؤول الرئيسي عن مقاومة الذبول. عند امتلائها بالماء، تضغط على الجدار الخلوي فيبقى النبات منتصباً. تلعب دوراً حيوياً في تحمل الجفاف عبر تنظيم الضغط الأسموزي.'
+                },
+                'cytoplasm': {
+                    title: 'السيتوبلازم',
+                    description: 'المادة الهلامية التي تملأ الخلية وتحتوي على جميع العضيات الأخرى. تحدث فيه العديد من التفاعلات الكيميائية الحيوية.',
+                    practical: 'هو بيئة العمل لكل عمليات الخلية. أي إجهاد (حرارة، جفاف) يؤثر على لزوجته وبالتالي على كفاءة كل العمليات الحيوية داخل الخلية.'
+                },
+                'nucleus': {
+                    title: 'النواة',
+                    description: 'مركز التحكم في الخلية، تحتوي على المادة الوراثية (DNA) التي توجه جميع أنشطة الخلية ونموها.',
+                    practical: 'تتحكم في إنتاج البروتينات والإنزيمات اللازمة للنمو ومقاومة الأمراض. برامج التربية والتحسين الوراثي تستهدف بشكل أساسي المادة الوراثية الموجودة هنا.'
+                },
+                'chloroplast': {
+                    title: 'البلاستيدات الخضراء',
+                    description: 'مصانع الغذاء في الخلية. تحتوي على الكلوروفيل وتقوم بعملية البناء الضوئي لتحويل ضوء الشمس إلى طاقة كيميائية (سكريات).',
+                    practical: 'كفاءة البناء الضوئي تحدد إنتاجية المحصول. نقص عناصر مثل النيتروجين والمغنيسيوم يؤثر مباشرة على تكوين الكلوروفيل وبالتالي على المحصول الكلي.'
+                },
+                'mitochondrion': {
+                    title: 'الميتوكوندريا',
+                    description: 'محطات الطاقة في الخلية. تقوم بعملية التنفس الخلوي لتحويل السكريات إلى طاقة قابلة للاستخدام (ATP).',
+                    practical: 'توفر الطاقة اللازمة لجميع العمليات الحيوية مثل امتصاص العناصر الغذائية من التربة. ضعف تهوية التربة يقلل الأكسجين اللازم لعملها، مما يضعف الجذور ويقلل الامتصاص.'
+                }
+            };
+
+            const cellComponents = document.querySelectorAll('.cell-component');
+            const infoTitle = document.getElementById('info-title');
+            const infoDescription = document.getElementById('info-description');
+            const infoPractical = document.getElementById('info-practical');
+
+            cellComponents.forEach(component => {
+                component.addEventListener('click', () => {
+                    const componentId = component.dataset.component;
+                    const data = cellData[componentId];
+                    
+                    infoTitle.textContent = data.title;
+                    infoDescription.textContent = data.description;
+                    infoPractical.textContent = data.practical;
+
+                    cellComponents.forEach(c => c.classList.remove('selected'));
+                    component.classList.add('selected');
+                });
+            });
+
+            const challengeCards = document.querySelectorAll('.challenge-card');
+            challengeCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const details = card.querySelector('.details');
+                    details.classList.toggle('hidden');
+                });
+            });
+
+            const nutrientData = {
+                ca: {
+                    labels: ['بناء الجدار الخلوي', 'نقل السكريات', 'تنشيط الإنزيمات'],
+                    values: [70, 20, 10],
+                    tip: 'ضروري لصلابة الثمار ومنع تشققها. رشه ورقياً أو أضفه أرضياً خاصة أثناء مرحلة عقد ونمو الثمار.'
+                },
+                k: {
+                    labels: ['التنظيم الأسموزي', 'فتح وغلق الثغور', 'نقل السكريات'],
+                    values: [50, 30, 20],
+                    tip: 'مفتاح تحمل الإجهاد المائي والحراري. يزيد من حجم وجودة الثمار. اهتم به في مراحل النمو الخضري المتقدمة ومراحل التزهير والثمار.'
+                },
+                p: {
+                    labels: ['مركبات الطاقة (ATP)', 'بناء الأحماض النووية', 'تطور الجذور'],
+                    values: [60, 25, 15],
+                    tip: 'أساس نمو الجذور وتكوين الطاقة. ضروري في بداية حياة النبات لضمان مجموع جذري قوي، وفي مرحلة التزهير لتوفير الطاقة.'
+                },
+                n: {
+                    labels: ['بناء البروتينات', 'تكوين الكلوروفيل', 'نمو المجموع الخضري'],
+                    values: [60, 25, 15],
+                    tip: 'أساسي لنمو النبات وتكوين الأوراق الخضراء. يرتبط بإنتاجية المحصول، لكن الإفراط فيه يؤدي إلى ضعف المقاومة للأمراض.'
+                },
+                fe: {
+                    labels: ['تكوين الكلوروفيل', 'تنفس الخلية', 'تثبيت النيتروجين'],
+                    values: [70, 20, 10],
+                    tip: 'ضروري لمنع الاصفرار في الأوراق الحديثة. يساهم في عمليات الأكسدة والاختزال ونقل الإلكترونات داخل الميتوكوندريا والبلاستيدات.'
+                },
+                zn: {
+                    labels: ['تخليق الهرمونات', 'تنشيط الإنزيمات', 'مقاومة الإجهاد'],
+                    values: [50, 40, 10],
+                    tip: 'يساهم في تخليق هرمون الأوكسين المسؤول عن استطالة الخلايا. نقصه يؤدي إلى تقزم النبات وصغر حجم الأوراق.'
+                }
+            };
+            
+            const nutrientSelect = document.getElementById('nutrient-select');
+            const nutrientTip = document.getElementById('nutrient-tip');
+            const ctx = document.getElementById('nutrientChart').getContext('2d');
+            let nutrientChart;
+
+            function createOrUpdateChart(data) {
+                if (nutrientChart) {
+                    nutrientChart.destroy();
+                }
+                nutrientChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'الأهمية النسبية للدور الخلوي (%)',
+                            data: data.values,
+                            backgroundColor: ['#166534', '#16a34a', '#6ee7b7'],
+                            borderColor: '#14532d',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: '#854d0e'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#854d0e',
+                                    font: {
+                                        size: 14
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'الأدوار الرئيسية للعنصر داخل الخلية',
+                                color: '#14532d',
+                                font: {
+                                    size: 18
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function updateNutrientInfo() {
+                const selectedNutrient = nutrientSelect.value;
+                const data = nutrientData[selectedNutrient];
+                createOrUpdateChart(data);
+                nutrientTip.textContent = data.tip;
+            }
+
+            nutrientSelect.addEventListener('change', updateNutrientInfo);
+            
+            // Initial load
+            setActiveSection('home');
+            updateNutrientInfo();
+        });
+    </script>
+</body>
+</html>
